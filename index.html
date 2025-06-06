@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multi Timer with Individual Stop</title>
+  <title>Double Timer</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -10,81 +10,103 @@
       padding: 2rem;
     }
     .timer {
-      font-size: 2rem;
-      margin: 1rem;
+      margin: 2rem;
+      padding: 1rem;
+      border: 2px solid #333;
+      border-radius: 10px;
+      display: inline-block;
+      min-width: 200px;
     }
-    .timer-block {
+    .time {
+      font-size: 2rem;
       margin-bottom: 1rem;
     }
     button {
-      font-size: 1rem;
       margin: 0.25rem;
       padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+    .row {
+      margin-top: 2rem;
     }
   </style>
 </head>
 <body>
-  <h1>⏱ Multi Timer Control</h1>
 
-  <div class="timer-block">
-    <div class="timer" id="timer1">00:00.0</div>
-    <button onclick="stopTimer(1)">Stop Timer 1</button>
+  <h1>Double Timer</h1>
+
+  <div class="timer" id="timer1">
+    <h2>Timer 1</h2>
+    <div class="time" id="display1">00:00.000</div>
+    <button onclick="startTimer(1)">Start</button>
+    <button onclick="stopTimer(1)">Stop</button>
+    <button onclick="resetTimer(1)">Reset</button>
   </div>
 
-  <div class="timer-block">
-    <div class="timer" id="timer2">00:00.0</div>
-    <button onclick="stopTimer(2)">Stop Timer 2</button>
+  <div class="timer" id="timer2">
+    <h2>Timer 2</h2>
+    <div class="time" id="display2">00:00.000</div>
+    <button onclick="startTimer(2)">Start</button>
+    <button onclick="stopTimer(2)">Stop</button>
+    <button onclick="resetTimer(2)">Reset</button>
   </div>
 
-  <button onclick="startAllTimers()">Start All</button>
-  <button onclick="resetAllTimers()">Reset All</button>
+  <div class="row">
+    <button onclick="startBoth()">▶ Start Both</button>
+    <button onclick="stopBoth()">⏹ Stop Both</button>
+  </div>
 
   <script>
-    const timers = [
-      { id: 1, startTime: 0, running: false, interval: null, display: "timer1" },
-      { id: 2, startTime: 0, running: false, interval: null, display: "timer2" }
-    ];
+    let timers = {
+      1: {start: null, elapsed: 0, interval: null},
+      2: {start: null, elapsed: 0, interval: null}
+    };
 
-    function formatTime(ms) {
-      const seconds = Math.floor(ms / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const deci = Math.floor((ms % 1000) / 100);
-      return `${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}.${deci}`;
+    function updateDisplay(id) {
+      const display = document.getElementById('display' + id);
+      const elapsed = timers[id].elapsed + (timers[id].start ? Date.now() - timers[id].start : 0);
+      const minutes = Math.floor(elapsed / 60000).toString().padStart(2, '0');
+      const seconds = Math.floor((elapsed % 60000) / 1000).toString().padStart(2, '0');
+      const millis = (elapsed % 1000).toString().padStart(3, '0');
+      display.textContent = `${minutes}:${seconds}.${millis}`;
     }
 
-    function updateTimer(index) {
-      const now = Date.now();
-      const timer = timers[index];
-      const elapsed = now - timer.startTime;
-      document.getElementById(timer.display).innerText = formatTime(elapsed);
-    }
-
-    function startAllTimers() {
-      const now = Date.now();
-      timers.forEach((timer, index) => {
-        if (!timer.running) {
-          timer.startTime = now;
-          timer.interval = setInterval(() => updateTimer(index), 100);
-          timer.running = true;
-        }
-      });
-    }
-
-    function stopTimer(id) {
-      const timer = timers.find(t => t.id === id);
-      if (timer && timer.running) {
-        clearInterval(timer.interval);
-        timer.running = false;
+    function startTimer(id) {
+      if (!timers[id].start) {
+        timers[id].start = Date.now();
+        timers[id].interval = setInterval(() => updateDisplay(id), 10);
       }
     }
 
-    function resetAllTimers() {
-      timers.forEach((timer) => {
-        clearInterval(timer.interval);
-        timer.running = false;
-        document.getElementById(timer.display).innerText = "00:00.0";
-      });
+    function stopTimer(id) {
+      if (timers[id].start) {
+        timers[id].elapsed += Date.now() - timers[id].start;
+        timers[id].start = null;
+        clearInterval(timers[id].interval);
+      }
     }
+
+    function resetTimer(id) {
+      timers[id].start = null;
+      timers[id].elapsed = 0;
+      clearInterval(timers[id].interval);
+      updateDisplay(id);
+    }
+
+    function startBoth() {
+      startTimer(1);
+      startTimer(2);
+    }
+
+    function stopBoth() {
+      stopTimer(1);
+      stopTimer(2);
+    }
+
+    // Initialize display
+    updateDisplay(1);
+    updateDisplay(2);
   </script>
+
 </body>
 </html>
