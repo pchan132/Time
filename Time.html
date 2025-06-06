@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Multi Timer with Individual Stop</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    .timer {
+      font-size: 2rem;
+      margin: 1rem;
+    }
+    .timer-block {
+      margin-bottom: 1rem;
+    }
+    button {
+      font-size: 1rem;
+      margin: 0.25rem;
+      padding: 0.5rem 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>⏱ Multi Timer Control</h1>
+
+  <div class="timer-block">
+    <div class="timer" id="timer1">00:00.0</div>
+    <button onclick="stopTimer(1)">Stop Timer 1</button>
+  </div>
+
+  <div class="timer-block">
+    <div class="timer" id="timer2">00:00.0</div>
+    <button onclick="stopTimer(2)">Stop Timer 2</button>
+  </div>
+
+  <button onclick="startAllTimers()">Start All</button>
+  <button onclick="resetAllTimers()">Reset All</button>
+
+  <script>
+    const timers = [
+      { id: 1, startTime: 0, running: false, interval: null, display: "timer1" },
+      { id: 2, startTime: 0, running: false, interval: null, display: "timer2" }
+    ];
+
+    function formatTime(ms) {
+      const seconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const deci = Math.floor((ms % 1000) / 100);
+      return `${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}.${deci}`;
+    }
+
+    function updateTimer(index) {
+      const now = Date.now();
+      const timer = timers[index];
+      const elapsed = now - timer.startTime;
+      document.getElementById(timer.display).innerText = formatTime(elapsed);
+    }
+
+    function startAllTimers() {
+      const now = Date.now();
+      timers.forEach((timer, index) => {
+        if (!timer.running) {
+          timer.startTime = now;
+          timer.interval = setInterval(() => updateTimer(index), 100);
+          timer.running = true;
+        }
+      });
+    }
+
+    function stopTimer(id) {
+      const timer = timers.find(t => t.id === id);
+      if (timer && timer.running) {
+        clearInterval(timer.interval);
+        timer.running = false;
+      }
+    }
+
+    function resetAllTimers() {
+      timers.forEach((timer) => {
+        clearInterval(timer.interval);
+        timer.running = false;
+        document.getElementById(timer.display).innerText = "00:00.0";
+      });
+    }
+  </script>
+</body>
+</html>
